@@ -5,13 +5,12 @@ from qiskit.aqua.algorithms.many_sample.qsvm import _QSVM_Estimator
 from qiskit.aqua.components.feature_maps import SecondOrderExpansion
 from qiskit.aqua.components.multiclass_extensions import AllPairs
 from qiskit.aqua.utils import split_dataset_to_data_and_labels
-from qiskit.aqua import run_algorithm, QuantumInstance
+from qiskit.aqua import QuantumInstance
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
-from sklearn.externals import joblib
-import pickle
+
 
 def iris(training_size, test_size, n):
     class_labels = [r'Setosa', r'Versicolor', r'Virginica']
@@ -40,15 +39,6 @@ def iris(training_size, test_size, n):
     return sample_train, training_input, test_input, class_labels
 
 
-"""se_length = np.double(input("Enter length of the sepal: "))
-
-se_width = np.double(input("Enter Width of the sepal: "))
-
-pe_length = np.double(input("Enter length of the petal: "))
-
-pe_width = np.double(input("Enter width of the petal: "))"""
-
-
 def iris_custom(n, s_length, s_width, p_length, p_width ):
     data, target = datasets.load_iris(return_X_y=True)
     sample_train, sample_test, label_train, label_test = \
@@ -74,27 +64,31 @@ def iris_custom(n, s_length, s_width, p_length, p_width ):
 
     return array_try
 
-n = 4
 
 sample_total, training_input, test_input, class_labels = iris(training_size=30,
                                                               test_size=10,
-                                                              n=n
+                                                              n=4
                                                               )
 
 datapoints, class_to_label = split_dataset_to_data_and_labels(test_input)
 
 seed = 10598
 
-feature_map = SecondOrderExpansion(feature_dimension=n, depth=2, entanglement='linear')
+feature_map = SecondOrderExpansion(feature_dimension=4, depth=2, entanglement='linear')
 qsvm = QSVM(feature_map, training_input, test_input, multiclass_extension=AllPairs(_QSVM_Estimator, [feature_map]))
 backend = BasicAer.get_backend('qasm_simulator')
 quantum_instance = QuantumInstance(backend, shots=1024, seed_simulator=seed, seed_transpiler=seed)
 result = qsvm.run(quantum_instance)
 
-pred = qsvm.predict(iris_custom(4, 5.9,3.2,4.8,1.8), quantum_instance)
 
-print(f"You have found an Iris {class_labels[pred[0]]}!")
+def run(s_length, s_width, p_length, p_width):
+    pred = qsvm.predict(iris_custom(4, s_length, s_width, p_length, p_width), quantum_instance)
+    return f"You have found an Iris {class_labels[pred[0]]}!"
 
-joblib.dump(result, 'model.pkl')
+
+
+
+
+
 
 
